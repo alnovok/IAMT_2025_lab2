@@ -10,14 +10,16 @@ class Optimizer:
 
     def optimize(self, ot: OptimizationTask):
         population = self.generate_initial_population(ot)
-        self.calculate_dresps(ot,population)
-
+        population_results = self.calculate_dresps(ot,population)
         for i in range(ot.config.max_iteration):
-            self.crossbending(population,ot)
-            self.mutation(ot)
-            self.selection(ot)
-            self.check_convergence(ot)
-            self.plot_results(ot)
+            children  = self.crossbending(population,ot)
+            self.mutation(ot, children)
+            children_results = self.calculate_dresps(ot, children)
+            new_population, results = self.selection(ot,population, population_results, children, children_results)
+            #self.check_convergence(ot)
+            ot.objective.values.append(results[0])
+        print(ot.objective.values)
+
 
     def generate_initial_population(self, ot: OptimizationTask):
         num_pars= len(ot.design_variables)
@@ -26,12 +28,35 @@ class Optimizer:
         return individuals
 
     def crossbending(self, population, ot:OptimizationTask):
-        pass
+        children = []
+        for i in range(ot.config.population_size):
+            parent1 = population[np.random.randint(0,ot.config.population_size)]
+            parent2 = population[np.random.randint(0,ot.config.population_size)]
+            children.append(np.array([parent1[0], parent2[1]]))
+        return np.array(children)
 
-    def mutation(self, ot:OptimizationTask):
-        pass
-    def selection(self, ot:OptimizationTask):
-        pass
+    def mutation(self, ot:OptimizationTask, children):
+        for child in children:
+            mutation1 = (-1+np.random.rand()*2)*0.1
+            mutation2 = (-1+np.random.rand()*2)*0.1
+            child = child + np.array([mutation1, mutation2])
+            if child[0] < ot.design_variables[0].lower_bound:
+                child[0] = ot.design_variables[0].lower_bound
+            if child[0] > ot.design_variables[0].upper_bound:
+                child[0] = ot.design_variables[0].upper_bound
+            if child[1] < ot.design_variables[1].lower_bound:
+                child[1] = ot.design_variables[1].lower_bound
+            if child[1] > ot.design_variables[1].upper_bound:
+                child[1] = ot.design_variables[1].upper_bound
+
+
+    def selection(self, ot:OptimizationTask, population, population_results, children, children_results):
+        results = np.concatenate((children_results.T,population_results.T))
+        index_array = np.argsort(results)
+        population=np.concatenate((children.T, population.T), axis = 1)
+        sorted_population = population.T[index_array]
+        sorted_results = results.T[index_array]
+        return sorted_population[0:ot.config.population_size], sorted_results[0:ot.config.population_size]
 
     def check_convergence(self, ot:OptimizationTask):
         pass
@@ -41,7 +66,7 @@ class Optimizer:
 
     def calculate_dresps(self,ot: OptimizationTask, population):
         #stress_results = np.array([])
-        stress_results = np.zeros(ot.config.population_size)
+        results = np.zeros(ot.config.population_size)
         i = 0
         for individual in population:
             self.change_input(individual, ot)
@@ -49,9 +74,9 @@ class Optimizer:
                           ansyscall=ot.solver_path, workingdir=ot.work_path)
             with open(ot.results_path, encoding='utf-8') as f:
                 lines = f.readlines()
-            stress_results[i] = lines[0]
+            results[i] = lines[0]
             i+=1
-        return stress_results
+        return results
 
 
 
