@@ -13,11 +13,11 @@ class Optimizer:
         population_results = self.calculate_dresps(ot,population)
         for i in range(ot.config.max_iteration):
             children  = self.crossbending(population,ot)
-            self.mutation(ot, children)
-            children_results = self.calculate_dresps(ot, children)
-            new_population, results = self.selection(ot,population, population_results, children, children_results)
+            mutated_children = self.mutation(ot, children)
+            children_results = self.calculate_dresps(ot, mutated_children)
+            population, population_results = self.selection(ot,population, population_results, mutated_children, children_results)
             #self.check_convergence(ot)
-            ot.objective.values.append(results[0])
+            ot.objective.values.append(population_results[0])
         print(ot.objective.values)
 
 
@@ -36,6 +36,7 @@ class Optimizer:
         return np.array(children)
 
     def mutation(self, ot:OptimizationTask, children):
+        mutated_children = []
         for child in children:
             mutation1 = (-1+np.random.rand()*2)*0.1
             mutation2 = (-1+np.random.rand()*2)*0.1
@@ -48,7 +49,8 @@ class Optimizer:
                 child[1] = ot.design_variables[1].lower_bound
             if child[1] > ot.design_variables[1].upper_bound:
                 child[1] = ot.design_variables[1].upper_bound
-
+            mutated_children.append(child)
+        return np.array(mutated_children)
 
     def selection(self, ot:OptimizationTask, population, population_results, children, children_results):
         results = np.concatenate((children_results.T,population_results.T))
