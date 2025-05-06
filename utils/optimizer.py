@@ -53,11 +53,18 @@ class Optimizer:
         return np.array(mutated_children)
 
     def selection(self, ot:OptimizationTask, population, population_results, children, children_results):
-        results = np.concatenate((children_results.T,population_results.T))
-        index_array = np.argsort(results)
+        results = np.concatenate((children_results.T,population_results.T),axis = 1).T
         population=np.concatenate((children.T, population.T), axis = 1)
-        sorted_population = population.T[index_array]
-        sorted_results = results.T[index_array]
+        temp_results = results
+        for i in range (len(ot.constraints)):
+            temp_results[:,i+1] = temp_results[:,i+1] - ot.constraints[i].upper_bound
+        temp_results = np.where(temp_results <= 0, 0, temp_results*10000)
+        objective = np.zeros((ot.config.population_size))
+        for i in range (len(ot.constraints)):
+            objective = objective + temp_results[:,i+1]
+        index_array = np.argsort(objective)
+        sorted_population = population.T[index_array,:]
+        sorted_results = results.T[index_array,:]
         return sorted_population[0:ot.config.population_size], sorted_results[0:ot.config.population_size]
 
     def check_convergence(self, ot:OptimizationTask):
@@ -68,7 +75,7 @@ class Optimizer:
 
     def calculate_dresps(self,ot: OptimizationTask, population):
         #stress_results = np.array([])
-        results = np.zeros(ot.config.population_size)
+        results = np.zeros((ot.config.population_size,1+len(ot.constraints)))
         i = 0
         for individual in population:
             self.change_input(individual, ot)
@@ -76,7 +83,9 @@ class Optimizer:
                           ansyscall=ot.solver_path, workingdir=ot.work_path)
             with open(ot.results_path, encoding='utf-8') as f:
                 lines = f.readlines()
-            results[i] = lines[0]
+            results[i, 0] = lines[0]
+            results[i, 1] = lines[1]
+            results[i, 2] = lines[0]
             i+=1
         return results
 
