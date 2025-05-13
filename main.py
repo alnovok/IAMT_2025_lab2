@@ -11,8 +11,8 @@ my_task.results_path = 'D:\\ANSWORK\\Novokshenov\\IAMT_2025\\results.txt'
 my_task.cae_model = 'D:\\ANSWORK\\Novokshenov\\IAMT_2025\\kirsh.txt'
 my_task.config = OptimizationConfig(5,0.5,0.5,5,0.001)
 my_task.objective = Objective('area', ObjectiveType.MIN, [])
-my_task.constraints.append(Constraint('stress',3e3,None,[]))
-my_task.constraints.append(Constraint('area',2.5,None,[]))
+my_task.constraints.append(Constraint('stress',2.8e3,None,[]))
+my_task.constraints.append(Constraint('area',2,None,[]))
 my_task.design_variables.append(DesignVariable('radius_a',0.1,0.9,0.1,[]))
 my_task.design_variables.append(DesignVariable('radius_b',0.1,0.9,0.1,[]))
 my_task.solver_path = 'C:\\Program Files\\ANSYS Inc\\v172\\ANSYS\\bin\\winx64\\ANSYS172.exe'

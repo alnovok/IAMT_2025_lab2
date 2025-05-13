@@ -39,7 +39,7 @@ def runAPDL(ansyscall,workingdir,scriptFilename):
                       outputFile)             
 #    print("invoking ansys with: ",callString)
     call(callString,shell=False)
-    print('Start ANSYS') 
+    #  print('Start ANSYS')
     # check output file for errors
 #    print("checking for errors")
     numerrors = "undetermined"
@@ -49,8 +49,8 @@ def runAPDL(ansyscall,workingdir,scriptFilename):
         print("could not open",outputFile)
     else:
         for line in searchfile:
-            if "NUMBER OF ERROR" in line: 
-                print(line)
+            if "NUMBER OF ERROR" in line:
+                # print(line)
                 numerrors = int(line.split()[-1])
         searchfile.close()        
     return(numerrors)
